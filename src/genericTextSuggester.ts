@@ -15,70 +15,32 @@ export class SuggestFile {
     origin: boolean;
 }
 
-export class GenericTextSuggester extends TextInputSuggest<SuggestFile> {
-    constructor(public app: App, public inputEl: HTMLInputElement | HTMLTextAreaElement, private items: SuggestFile[]) {
+export class GenericTextSuggester extends TextInputSuggest<string> {
+    constructor(public app: App, public inputEl: HTMLInputElement | HTMLTextAreaElement, private items: string[]) {
         super(app, inputEl);
     }
 
-    getSuggestions(inputStr: string): SuggestFile[] {
-        const inputLowerCase: string = inputStr.toLowerCase();
-
+    getSuggestions(inputStr: string): string[] {
+        const inputLowerCase=inputStr.toLowerCase();
         const filtered = this.items.filter(item => {
-            if (!item.name.toLowerCase()) console.log(JSON.parse(JSON.stringify(item)));
-            if (item.name?.toLowerCase()?.contains(inputLowerCase))
-                return item;
-            if (item.path?.toLowerCase()?.contains(inputLowerCase) && item?.origin)
+            if (item.toLowerCase().contains(inputLowerCase))
                 return item;
         });
 
         if (!filtered) this.close();
-        if (filtered?.length > 0) return filtered.sort((a, b) => {
-            // if (a.origin && !b.origin) return -1;
-            // if (!a.origin && b.origin) return 1;
-            const aFileName = a.name.toLowerCase(), bFileName = b.name.toLowerCase();
-            const aFilePath = a.path.toLowerCase(), bFilePath = b.path.toLowerCase();
-            const aFileNamePos = aFileName.indexOf(inputLowerCase), bFileNamePos = bFileName.indexOf(inputLowerCase);
-            if (aFileNamePos !== -1 && bFileNamePos !== -1) {
-                if (aFileNamePos !== bFileNamePos)
-                    return aFileNamePos - bFileNamePos;
-                else {
-                    return aFileName.length - bFileName.length;
-                }
-            }
-            else if (aFileName.indexOf(inputLowerCase) === -1) {
-                return 1;
-            }
-            else if (bFileName.indexOf(inputLowerCase) === -1) {
-                return -1;
-            }
-            const aFilePathPos = aFilePath.indexOf(inputLowerCase);
-            const bFilePathPos = bFilePath.indexOf(inputLowerCase);
-            if (aFilePathPos !== bFilePathPos) return aFilePathPos - bFilePathPos;
-            else return aFilePath.length - bFilePath.length;
-        });
+        if (filtered?.length > 0) return filtered;
         return [];
     }
 
-    selectSuggestion(item: SuggestFile): void {
-        this.inputEl.value = item.path;
+    selectSuggestion(item: string): void {
+        this.inputEl.value = item;
         this.inputEl.trigger("input");
         this.close();
     }
 
-    renderSuggestion(value: SuggestFile, el: HTMLElement): void {
+    renderSuggestion(value: string, el: HTMLElement): void {
         if (value) {
-            // el.setText(value);
-            let suggestContainer = el.createDiv();
-            suggestContainer.addClasses(["path-finder", "suggest-item"]);
-            let title = suggestContainer.createDiv({ text: value.name });
-            title.addClasses(["path-finder", "suggest-item", "item-name"]);
-            let content = suggestContainer.createDiv({ text: value.path });
-            content.addClasses(["path-finder", "suggest-item", "item-path"]);
-            if (!value.origin) {
-                let icon = suggestContainer.createDiv();
-                setIcon(icon, "forward-arrow");
-                icon.addClasses(["path-finder", "alias-icon"])
-            }
+            el.setText(value);
         }
     }
 }

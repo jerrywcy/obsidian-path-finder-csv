@@ -2,7 +2,7 @@ import * as d3 from 'd3'
 import { AbstractTextComponent, Notice, setIcon } from "obsidian"
 import { ExtendedGraph } from 'src/algorithms/graph/types';
 
-export class d3ForceGraphNode {
+export class D3ForceGraphNode {
     // Internal property
     index?: number;
     x?: number;
@@ -17,11 +17,11 @@ export class d3ForceGraphNode {
     group?: any;
 }
 
-export class d3ForceGraphLink {
+export class D3ForceGraphLink {
     // Internal property
     index?: number;
-    source?: d3ForceGraphNode;
-    target?: d3ForceGraphNode;
+    source?: D3ForceGraphNode;
+    target?: D3ForceGraphNode;
 
     // Custom property
     type?: string;
@@ -56,8 +56,8 @@ export async function ForceGraphWithLabels(
         nodeStrokeOpacity = 1, // node stroke opacity
         nodeRadius = 5, // node radius, in pixels
         nodeStrength = -400,
-        linkSource = ({ source }: d3ForceGraphLink) => source, // given d in links, returns a node identifier string
-        linkTarget = ({ target }: d3ForceGraphLink) => target, // given d in links, returns a node identifier string
+        linkSource = ({ source }: D3ForceGraphLink) => source, // given d in links, returns a node identifier string
+        linkTarget = ({ target }: D3ForceGraphLink) => target, // given d in links, returns a node identifier string
         linkStroke = "#999", // link stroke color
         linkStrokeOpacity = 0.6, // link stroke opacity
         linkStrokeWidth = 3, // given d in links, returns a stroke width in pixels
@@ -71,20 +71,20 @@ export async function ForceGraphWithLabels(
         nodeTextFill = "currentColor",
         nodeTextStroke = "black",
         linkGroups,
-        linkType = ({ type }: d3ForceGraphLink) => type
+        linkType = ({ type }: D3ForceGraphLink) => type
     }: {
-        nodeId?: (d: d3ForceGraphNode, i?: number) => any;
-        nodeGroup?: (d: d3ForceGraphNode, i?: number) => any;
+        nodeId?: (d: D3ForceGraphNode, i?: number) => any;
+        nodeGroup?: (d: D3ForceGraphNode, i?: number) => any;
         nodeGroups?: any[];
-        nodeTitle?: (d: d3ForceGraphNode, i?: number) => any;
+        nodeTitle?: (d: D3ForceGraphNode, i?: number) => any;
         nodeFill?: any;
         nodeStroke?: any;
         nodeStrokeWidth?: any;
         nodeStrokeOpacity?: number;
         nodeRadius?: any;
         nodeStrength?: any;
-        linkSource?: (d: d3ForceGraphLink, i?: number) => any;
-        linkTarget?: (d: d3ForceGraphLink, i?: number) => any;
+        linkSource?: (d: D3ForceGraphLink, i?: number) => any;
+        linkTarget?: (d: D3ForceGraphLink, i?: number) => any;
         linkStroke?: any;
         linkStrokeOpacity?: any;
         linkStrokeWidth?: any;
@@ -200,7 +200,7 @@ export async function ForceGraphWithLabels(
         .data(nodes)
         .join("g")
         .classed("node", true)
-        .classed("fixed", (d: d3ForceGraphNode) => d.fx !== undefined)
+        .classed("fixed", (d: D3ForceGraphNode) => d.fx !== undefined)
         .call(drag(simulation))
         .on("click", click);
 
@@ -229,21 +229,21 @@ export async function ForceGraphWithLabels(
         .on("mouseout", setSelection(false));
 
     function setSelection(flag: boolean) {
-        return function (evt: any, from: d3ForceGraphNode) {
-            setNodeClass(node.filter((to: d3ForceGraphNode) => {
+        return function (evt: any, from: D3ForceGraphNode) {
+            setNodeClass(node.filter((to: D3ForceGraphNode) => {
                 let u = from.id, v = to.id;
                 return existLink.get(`${u}|${v}`) || existLink.get(`${v}|${u}`);
             }), "selected", flag);
-            setNodeClass(node.filter((to: d3ForceGraphNode) => {
+            setNodeClass(node.filter((to: D3ForceGraphNode) => {
                 let u = from.id, v = to.id;
                 return !(existLink.get(`${u}|${v}`) || existLink.get(`${v}|${u}`)) && u !== v;
             }), "unselected", flag);
             setNodeClass(d3.select(this), "center", flag);
 
-            setLinkClass(link.filter((d: d3ForceGraphLink) => {
+            setLinkClass(link.filter((d: D3ForceGraphLink) => {
                 return d.source.id == from.id || d.target.id == from.id;
             }), "selected", flag);
-            setLinkClass(link.filter((d: d3ForceGraphLink) => {
+            setLinkClass(link.filter((d: D3ForceGraphLink) => {
                 return !(d.source.id == from.id || d.target.id == from.id);
             }), "unselected", flag);
         }
@@ -276,15 +276,15 @@ export async function ForceGraphWithLabels(
     node.append("circle")
         .classed("node-circle", true);
 
-    if (W) link.attr("stroke-width", ({ index: i }: d3ForceGraphLink): any => W[i]);
-    if (L) link.attr("stroke", ({ index: i }: d3ForceGraphLink): any => L[i]);
-    if (G) node.attr("fill", ({ index: i }: d3ForceGraphNode): any => color(G[i]));
+    if (W) link.attr("stroke-width", ({ index: i }: D3ForceGraphLink): any => W[i]);
+    if (L) link.attr("stroke", ({ index: i }: D3ForceGraphLink): any => L[i]);
+    if (G) node.attr("fill", ({ index: i }: D3ForceGraphNode): any => color(G[i]));
     if (T)
         node.append("text")
             .attr("x", 0)
             .attr("y", -30)
             .attr("align", "center")
-            .text(({ index: i }: d3ForceGraphNode) => T[i])
+            .text(({ index: i }: D3ForceGraphNode) => T[i])
             .classed("node-text", true);
     // .clone(true).lower()
     // .classed("outer", true); 
@@ -308,10 +308,10 @@ export async function ForceGraphWithLabels(
 
     function ticked() {
         link.attr("d", linkArc);
-        node.attr("transform", (d: d3ForceGraphNode) => `translate(${d.x},${d.y})`);
+        node.attr("transform", (d: D3ForceGraphNode) => `translate(${d.x},${d.y})`);
     }
 
-    function linkArc(d: d3ForceGraphLink) {
+    function linkArc(d: D3ForceGraphLink) {
         if (d.type == "monodirectional") {
             const angle = Math.atan2(d.source.y - d.target.y, d.source.x - d.target.x);
             const fromX = d.source.x, fromY = d.source.y;
@@ -332,7 +332,7 @@ export async function ForceGraphWithLabels(
         }
     }
 
-    function click(evt: MouseEvent, d: d3ForceGraphNode) {
+    function click(evt: MouseEvent, d: D3ForceGraphNode) {
         if (d3.select(this).classed("fixed")) {
             delete d.fx;
             delete d.fy;
@@ -367,7 +367,7 @@ export async function ForceGraphWithLabels(
     }
 
     function drag(simulation: d3.Simulation<d3.SimulationNodeDatum, undefined>) {
-        function dragstarted(event: any, d: d3ForceGraphNode) {
+        function dragstarted(event: any, d: D3ForceGraphNode) {
             d3.select(this)
                 .classed("fixed", true);
             if (!event.active) simulation.alphaTarget(1).restart();
@@ -375,13 +375,13 @@ export async function ForceGraphWithLabels(
             d.fy = d.y;
         }
 
-        function dragged(event: any, d: d3ForceGraphNode) {
+        function dragged(event: any, d: D3ForceGraphNode) {
             d.fx = clamp(event.x, - Infinity, Infinity);
             d.fy = clamp(event.y, - Infinity, Infinity);
             simulation.alpha(1).restart();
         }
 
-        function dragended(event: any, d: d3ForceGraphNode) {
+        function dragended(event: any, d: D3ForceGraphNode) {
             if (!event.active) simulation.alphaTarget(0);
             // d.fx = null;
             // d.fy = null;
@@ -475,17 +475,19 @@ export async function ForceGraphWithLabels(
         // Construct the scales.
         let color = nodeGroup == null ? null : d3.scaleOrdinal(nodeGroups, colors);
 
-        nodes = d3.map(nodes, (_, i) => ({ id: N[i], group: nodeGroup(_) }));
+        nodes = d3.map(nodes, (_, i) => {
+            return { id: N[i], group: nodeGroup(_) }
+        });
         links = d3.map(links, (_, i) => {
             existLink.set(`${LS[i]}|${LT[i]}`, true);
             return { source: LS[i], target: LT[i], type: LG[i] }
         });
-        const old = new Map(node.data().map((d: d3ForceGraphNode) => [d.id, d]));
-        nodes = nodes.map((d: d3ForceGraphNode) => Object.assign(old.get(d.id) || {}, d));
-        links = links.map((d: d3ForceGraphNode) => Object.assign({}, d));
+        const old = new Map(node.data().map((d: D3ForceGraphNode) => [d.id, d]));
+        nodes = nodes.map((d: D3ForceGraphNode) => Object.assign(old.get(d.id) || {}, d));
+        links = links.map((d: D3ForceGraphNode) => Object.assign({}, d));
 
         node = node
-            .data(nodes, (d: d3ForceGraphNode) => d.id)
+            .data(nodes, (d: D3ForceGraphNode) => d.id)
             .join(
                 enter => enter
                     .append("g")
@@ -498,7 +500,7 @@ export async function ForceGraphWithLabels(
                         .attr("x", 0)
                         .attr("y", -30)
                         .attr("align", "center")
-                        .text(d => nodeTitle(d))
+                        .text(d => {console.log(d);return nodeTitle(d);})
                         .classed("node-text", true)
                     )
                     .call(enter => enter
@@ -506,13 +508,13 @@ export async function ForceGraphWithLabels(
                     )
             )
             .classed("node", true)
-            .classed("fixed", (d: d3ForceGraphNode) => d.fx !== undefined)
+            .classed("fixed", (d: D3ForceGraphNode) => d.fx !== undefined)
             .call(drag(simulation))
             .on("click", click)
             .on("mouseover", setSelection(true))
             .on("mouseout", setSelection(false))
         link = link
-            .data(links, (d: d3ForceGraphLink) => `${d.source}|${d.target}`)
+            .data(links, (d: D3ForceGraphLink) => `${d.source}|${d.target}`)
             .join("path")
             .classed("link", true)
             .attr("marker-end", `url(#arrow)`)
@@ -588,7 +590,7 @@ export async function ForceGraphWithLabels(
             .text((d) => nodeTitle({ id: d }))
             .on("mouseover", function (evt: any, u: any) {
                 setNodeClass(node
-                    .filter((d: d3ForceGraphNode) => {
+                    .filter((d: D3ForceGraphNode) => {
                         let v = d.id;
                         return u === v;
                     }), "center", true);
@@ -597,7 +599,7 @@ export async function ForceGraphWithLabels(
             })
             .on("mouseout", function (evt: any, u: any) {
                 setNodeClass(node
-                    .filter((d: d3ForceGraphNode) => {
+                    .filter((d: D3ForceGraphNode) => {
                         let v = d.id;
                         return u === v;
                     }), "center", false);
@@ -608,20 +610,20 @@ export async function ForceGraphWithLabels(
 
     function setSelectedPath(nodeMap: Map<any, boolean>, linkMap: Map<any, boolean>, flag: boolean) {
         setNodeClass(node
-            .filter((d: d3ForceGraphNode) => {
+            .filter((d: D3ForceGraphNode) => {
                 return nodeMap.get(d.id);
             }), "selected", flag);
         setNodeClass(node
-            .filter((d: d3ForceGraphNode) => {
+            .filter((d: D3ForceGraphNode) => {
                 return !nodeMap.get(d.id);
             }), "unselected", flag);
         setLinkClass(link
-            .filter((d: d3ForceGraphLink) => {
+            .filter((d: D3ForceGraphLink) => {
                 return linkMap.get(`${d.source.id}|${d.target.id}`) ||
                     linkMap.get(`${d.target.id}|${d.source.id}`);
             }), "selected", flag);
         setLinkClass(link
-            .filter((d: d3ForceGraphLink) => {
+            .filter((d: D3ForceGraphLink) => {
                 return !(linkMap.get(`${d.source.id}|${d.target.id}`) ||
                     linkMap.get(`${d.target.id}|${d.source.id}`));
             }), "unselected", flag);
