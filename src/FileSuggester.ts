@@ -1,5 +1,5 @@
 import { App, setIcon } from "obsidian";
-import { SuggestFile } from "./genericTextSuggester";
+import { SuggestFile } from "./GenericTextSuggester";
 import { TextInputSuggest } from "./suggest";
 
 export class FileSuggester extends TextInputSuggest<SuggestFile> {
