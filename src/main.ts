@@ -1,35 +1,75 @@
-import { normalizePath, Notice, Plugin } from 'obsidian';
+import { normalizePath, Notice, Plugin, TFile } from 'obsidian';
 
 import { ExtendedGraph } from "src/algorithms/graph/types"
-import { PathsModal } from './modals';
+import { PathsCSVModal, PathsFileModal } from './modals';
 import { PathGraphView, PathView, VIEW_TYPE_PATHGRAPHVIEW, VIEW_TYPE_PATHVIEW } from './view';
 import { dijkstra } from './algorithms/graph/dijkstra';
+import { DEFAULT_SETTINGS, PathFinderCSVPluginSettings, PathFinderCSVPluginSettingTab } from './settings';
+import { parse } from 'csv';
 
-export default class PathFinderPlugin extends Plugin {
+export default class PathFinderCSVPlugin extends Plugin {
+	settings: PathFinderCSVPluginSettings
+
 	async onload() {
-		console.log("Loading Path Finder plugin");
+		console.log("Loading Path Finder CSV plugin");
+		await this.loadSettings();
+		this.addSettingTab(new PathFinderCSVPluginSettingTab(this.app,this));
 
 		this.addCommand({
-			id: 'find-shortest-path',
+			id: 'find-shortest-path-csv',
 			name: 'Find Shortest Path',
-			callback: () => {
-				new PathsModal(this.app, this.findPaths.bind(this, "shortest_path"), "shortest_path").open();
+			callback: async () => {
+				if (this.settings.graphDataPath){
+					let csvFile=app.vault.getAbstractFileByPath(this.settings.graphDataPath);
+					if (!(csvFile instanceof TFile)){
+						new Notice(`Illegal graph data path: ${this.settings.graphDataPath}`);
+						return ;
+					}
+					let csvContent=await app.vault.read(csvFile);
+					new PathsCSVModal(this.app, this.findPaths.bind(this, "shortest_path"), "shortest_path", csvContent).open();
+				}
+				else{
+					new PathsFileModal(this.app, this.findPaths.bind(this, "shortest_path"), "shortest_path").open();
+				}
 			}
 		});
 
 		this.addCommand({
-			id: 'find-all-paths-as-graph',
+			id: 'find-all-paths-as-graph-csv',
 			name: 'Find All Path As Graph',
-			callback: () => {
-				new PathsModal(this.app, this.findPaths.bind(this, "all_paths_as_graph"), "all_paths_as_graph").open();
+			callback: async () => {
+				if (this.settings.graphDataPath){
+					let csvFile=app.vault.getAbstractFileByPath(this.settings.graphDataPath);
+					if (!(csvFile instanceof TFile)){
+						new Notice(`Illegal graph data path: ${this.settings.graphDataPath}`);
+						return ;
+					}
+					let csvContent=await app.vault.read(csvFile);
+					new PathsCSVModal(this.app, this.findPaths.bind(this, "all_paths_as_graph"), "all_paths_as_graph", csvContent).open();
+				}
+				else {
+					new PathsFileModal(this.app, this.findPaths.bind(this, "all_paths_as_graph"), "all_paths_as_graph").open();
+				}
 			}
 		});
 
 		this.addCommand({
-			id: 'find-all-paths',
+			id: 'find-all-paths-csv',
 			name: 'Find All Path',
-			callback: () => {
-				new PathsModal(this.app, this.findPaths.bind(this, "all_paths"), "all_paths").open();
+			callback: async () => {
+				console.log(this.settings.graphDataPath);
+				if (this.settings.graphDataPath){
+					let csvFile=app.vault.getAbstractFileByPath(this.settings.graphDataPath);
+					if (!(csvFile instanceof TFile)){
+						new Notice(`Illegal graph data path: ${this.settings.graphDataPath}`);
+						return ;
+					}
+					let csvContent=await app.vault.read(csvFile);
+					new PathsCSVModal(this.app, this.findPaths.bind(this, "all_paths"), "all_paths", csvContent).open();
+				}
+				else {
+					new PathsFileModal(this.app, this.findPaths.bind(this, "all_paths"), "all_paths").open();
+				}
 			}
 		});
 
@@ -48,6 +88,19 @@ export default class PathFinderPlugin extends Plugin {
 		this.app.workspace.detachLeavesOfType(VIEW_TYPE_PATHGRAPHVIEW);
 		this.app.workspace.detachLeavesOfType(VIEW_TYPE_PATHVIEW);
 	}
+	/**
+	 * Load settings
+	 */
+	async loadSettings() {
+		this.settings = Object.assign({}, DEFAULT_SETTINGS, await this.loadData());
+	}
+
+	/**
+	 * Save settings
+	 */
+	async saveSettings() {
+		await this.saveData(this.settings);
+	}
 
 	/**
 	 * Find paths and show them in new view according to `operation`.
@@ -60,7 +113,7 @@ export default class PathFinderPlugin extends Plugin {
 	 * @param to The file to end with.
 	 * @param length The maximum length of all paths shown. Useless if `operation`==="shortest_path".
 	 */
-	findPaths(operation: "shortest_path" | "all_paths_as_graph" | "all_paths", from: string, to: string, length?: number) {
+	async findPaths(operation: "shortest_path" | "all_paths_as_graph" | "all_paths", from: string, to: string, length?: number) {
 		from = normalizePath(from);
 		to = normalizePath(to);
 		let { vault } = app;
@@ -75,7 +128,7 @@ export default class PathFinderPlugin extends Plugin {
 			return;
 		}
 
-		let graph = this.buildGraphFromLinks();
+		let graph = await this.buildGraph();
 
 		let source = graph.getID(from);
 		let target = graph.getID(to);
@@ -111,13 +164,38 @@ export default class PathFinderPlugin extends Plugin {
 	 * Get the graph formed by all notes in the vault.
 	 * @returns The graph formed by all notes in the vault.
 	 */
-	buildGraphFromLinks(): ExtendedGraph {
+	async buildGraph(): Promise<ExtendedGraph> {
 		let graph = new ExtendedGraph();
-		let { resolvedLinks } = app.metadataCache;
-		for (let fromFilePath in resolvedLinks) {
-			for (let toFilePath in resolvedLinks[fromFilePath]) {
-				graph.addEdgeExtended(fromFilePath, toFilePath, 1);
-				graph.addEdgeExtended(toFilePath, fromFilePath, 1);
+		if (this.settings.graphDataPath){
+			let csvFile=app.vault.getAbstractFileByPath(this.settings.graphDataPath);
+			if (!(csvFile instanceof TFile)){
+				new Notice(`Illegal graph data path: ${this.settings.graphDataPath}`);
+				return new ExtendedGraph();
+			}
+			let csvContent=await app.vault.read(csvFile);
+			let parser=parse(csvContent);
+			for await (let record of parser){
+				let u=record[0];
+				let v=record[1];
+				let w=parseInt(record[2]);
+				if (!(record instanceof Array) || 
+					(typeof u)!=="string" || 
+					(typeof v)!=="string" || 
+					(isNaN(w) || w<0)){
+					new Notice(`Wrong CSV Format: ${record}`);
+					return new ExtendedGraph();
+				}
+				graph.addEdgeExtended(u,v,w);
+				console.log(u,v,w);
+			}
+		}
+		else{
+			let { resolvedLinks } = app.metadataCache;
+			for (let fromFilePath in resolvedLinks) {
+				for (let toFilePath in resolvedLinks[fromFilePath]) {
+					graph.addEdgeExtended(fromFilePath, toFilePath, 1);
+					graph.addEdgeExtended(toFilePath, fromFilePath, 1);
+				}
 			}
 		}
 		return graph;
@@ -146,7 +224,7 @@ export default class PathFinderPlugin extends Plugin {
 			pathGraphViewLeaf.detach();
 			return;
 		}
-		pathGraphView.setData(from, to, length, graph);
+		pathGraphView.setData(from, to, length, graph, this.settings.graphDataPath!=="" && this.settings.graphDataPath!==undefined);
 
 		this.app.workspace.revealLeaf(
 			this.app.workspace.getLeavesOfType(VIEW_TYPE_PATHGRAPHVIEW)[0]

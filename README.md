@@ -1,20 +1,32 @@
-# Obsidian Path Finder Plugin
+# Obsidian Path Finder CSV Plugin
+
+This plugin is developed based on [jerrywcy/obsidian-path-finder](https://github.com/jerrywcy/obsidian-path-finder).
+
+This plugin may be still unstable to use.
 
 ## Install
 
 ### BRAT
 
 1. Install [Obsidian42-BRAT](https://github.com/TfTHacker/obsidian42-brat) plugin.
-2. Click `Add new beta plugin` and fill in `jerrywcy/obsidian-path-finder`.
+2. Click `Add new beta plugin` and fill in `jerrywcy/obsidian-path-finder-csv`.
 3. Activate plugin.
 
 ### Manually
 
-1. Download `obsidian-path-finder.zip` from [Releases](https://github.com/jerrywcy/obsidian-path-finder/releases).
-2. Decompress the `.zip` file and put the folder `obsidian-path-finder` under `path-to-your-vault/.obsidian/plugins/`.
+1. Download `obsidian-path-finder-csv.zip` from [Releases](https://github.com/jerrywcy/obsidian-path-finder-csv/releases).
+2. Decompress the `.zip` file and put the folder `obsidian-path-finder-csv` under `path-to-your-vault/.obsidian/plugins/`.
 3. Activate plugin(Maybe require refreshing).
 
 ## Feature
+
+### Use data from csv to generate a graph
+
+![Setting: Graph Data Path](assets/settings-graph-data-path.png)
+
+Set the path to the csv file containing graph data. **Note: Relative path from the vault root to the csv.**
+
+Set it to empty and the plugin will behave the same as [jerrywcy/obsidian-path-finder](https://github.com/jerrywcy/obsidian-path-finder).
 
 ### Find shortest path between two files
 
