@@ -1,7 +1,7 @@
 {
-  "name": "obsidian-path-finder",
-  "version": "1.0.11",
-  "description": "A plugin that can find the shortest path between two notes. Not sure who will want to use it...",
+  "name": "obsidian-path-finder-csv",
+  "version": "1.0.0",
+  "description": "A plugin that can find the shortest path between two items in a given graph in the form of CSV.",
   "main": "main.js",
   "scripts": {
     "dev": "node esbuild.config.mjs",
@@ -41,6 +41,7 @@
   ],
   "dependencies": {
     "@popperjs/core": "^2.11.5",
+    "csv": "^6.2.0",
     "d3": "^7.5.0",
     "heap-js": "^2.2.0",
     "svelte-language-server": "^0.14.29"

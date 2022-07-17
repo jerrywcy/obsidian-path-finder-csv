@@ -1,35 +1,48 @@
-# Obsidian Path Finder Plugin
+# Obsidian Path Finder CSV Plugin
+
+This plugin is developed based on [jerrywcy/obsidian-path-finder](https://github.com/jerrywcy/obsidian-path-finder).
+
+This plugin may be still unstable to use.
 
 ## Install
 
 ### BRAT
 
 1. Install [Obsidian42-BRAT](https://github.com/TfTHacker/obsidian42-brat) plugin.
-2. Click `Add new beta plugin` and fill in `jerrywcy/obsidian-path-finder`.
+2. Click `Add new beta plugin` and fill in `jerrywcy/obsidian-path-finder-csv`.
 3. Activate plugin.
 
 ### Manually
 
-1. Download `obsidian-path-finder.zip` from [Releases](https://github.com/jerrywcy/obsidian-path-finder/releases).
-2. Decompress the `.zip` file and put the folder `obsidian-path-finder` under `path-to-your-vault/.obsidian/plugins/`.
+1. Download `obsidian-path-finder-csv.zip` from [Releases](https://github.com/jerrywcy/obsidian-path-finder-csv/releases).
+2. Decompress the `.zip` file and put the folder `obsidian-path-finder-csv` under `path-to-your-vault/.obsidian/plugins/`.
 3. Activate plugin(Maybe require refreshing).
 
 ## Feature
+
+### Use data from csv to generate a graph
+
+![Setting: Graph Data Path](assets/settings-graph-data-path.png)
+
+Set the path to the csv file containing graph data. **Note: Relative path from the vault root to the csv.**
+
+Set it to empty and the plugin will behave the same as [jerrywcy/obsidian-path-finder](https://github.com/jerrywcy/obsidian-path-finder).
 
 ### Find shortest path between two files
 
 ![Find Shortest Path](assets/find-shortest-path.gif)
 
-**From:** The file to start from. Use full path from vault root to the file.
+**From:** The item to start from.
 
-**To:** The file to end with. Use full path from vault root to the file.
+**To:** The item to end with.
+
 ### Find all paths between files as graph
 
 ![Find All Paths As Graph](assets/find-all-paths-as-graph.gif)
 
-**From:** The file to start from. Use full path from vault root to the file.
+**From:** The item to start from.
 
-**To:** The file to end with. Use full path from vault root to the file.
+**To:** The item to end with.
 
 **Length:** The maximum length of all paths. Often a path that is too long can be meaningless, so length limitation may be necessary. Set 0 to show all paths regardless of length. **Setting length to 0 may lead to Obsidian crushing due to mass amount of nodes rendering if your vault is too big, so use at your own risk.**
 
@@ -39,9 +52,9 @@ Paths shown in the floating panel will be sorted from the shortest to the longes
 
 ![Find All Paths](assets/find-all-paths.gif)
 
-**From:** The file to start from. Use full path from vault root to the file.
+**From:** The item to start from.
 
-**To:** The file to end with. Use full path from vault root to the file.
+**To:** The item to end with.
 
 **Length:** The maximum length of all paths. Set 0 to show all paths regardless of length.
 

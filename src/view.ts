@@ -1,15 +1,17 @@
 import { ItemView, Notice, setIcon, TFile, WorkspaceLeaf } from "obsidian";
 
 import { ExtendedGraph } from 'src/algorithms/graph/types';
-import { getNextPath } from "./algorithms/graph/getNextPath.js";
-import { d3ForceGraphLink, d3ForceGraphNode, ForceGraphWithLabels } from './ui/d3ForceGraphWithLabels';
+import { getNextPath } from "./algorithms/graph/GetNextPath.js";
+import { D3ForceGraphLink, D3ForceGraphNode, ForceGraphWithLabels } from './ui/D3ForceGraphWithLabels';
 
-export const VIEW_TYPE_PATHGRAPHVIEW = "path-graph-view";
-export const VIEW_TYPE_PATHVIEW = "path-view"
+export const VIEW_TYPE_PATHGRAPHVIEW = "path-graph-csv-view";
+export const VIEW_TYPE_PATHVIEW = "path-csv-view"
 
 export class PathGraphView extends ItemView {
     source: number;
     target: number;
+    generatedFromCSV: boolean;
+
     constructor(leaf: WorkspaceLeaf) {
         super(leaf);
     }
@@ -19,7 +21,7 @@ export class PathGraphView extends ItemView {
     }
 
     getDisplayText() {
-        return "Path view";
+        return "Path Graph view";
     }
 
     onResize(): void {
@@ -34,9 +36,10 @@ export class PathGraphView extends ItemView {
      * @param graph The graph.
      * @returns An array of objects, each representing one node. {id: any, group: "source" | "target" | "node"}
      */
-    getNodes(graph: ExtendedGraph): d3ForceGraphNode[] {
-        let ret: d3ForceGraphNode[] = [];
+    getNodes(graph: ExtendedGraph): D3ForceGraphNode[] {
+        let ret: D3ForceGraphNode[] = [];
         for (let i = 1; i <= graph.getN(); i++) {
+            console.log(i,graph.getName(i));
             ret.push({
                 id: graph.getName(i),
                 group: i === this.source
@@ -54,23 +57,36 @@ export class PathGraphView extends ItemView {
      * @param graph The graph.
      * @returns An array of objects, each representing one link. 
      */
-    getLinks(graph: ExtendedGraph): d3ForceGraphLink[] {
-        let ret: d3ForceGraphLink[] = [];
+    getLinks(graph: ExtendedGraph): D3ForceGraphLink[] {
+        let ret: D3ForceGraphLink[] = [];
         for (let i = 1; i <= graph.getM(); i++) {
-            let fromFilePath = graph.getName(graph.edges[i].u), toFilePath = graph.getName(graph.edges[i].v);
-            if (!fromFilePath || !toFilePath) continue;
-            let resolvedLinks = app.metadataCache.resolvedLinks;
-            if (resolvedLinks[fromFilePath][toFilePath]) {
-                ;
-                let tmp = {
-                    source: fromFilePath,
-                    target: toFilePath,
+            let from = graph.getName(graph.edges[i].u), to = graph.getName(graph.edges[i].v);
+            if (!from || !to) continue;
+            if (this.generatedFromCSV){
+                let u=graph.getID(from),v=graph.getID(to);
+                let tmp={
+                    source: from,
+                    target: to,
                     type:
-                        resolvedLinks[toFilePath][fromFilePath]
+                        graph.edgeID.get(`${v},${u}`)
                             ? "bidirectional"
                             : "monodirectional"
-                };
+                }
                 ret.push(tmp);
+            }
+            else {
+                let resolvedLinks = app.metadataCache.resolvedLinks;
+                if (resolvedLinks[from][to]) {
+                    let tmp = {
+                        source: from,
+                        target: to,
+                        type:
+                            resolvedLinks[to][from]
+                                ? "bidirectional"
+                                : "monodirectional"
+                    };
+                    ret.push(tmp);
+                }
             }
         }
         return ret;
@@ -84,7 +100,7 @@ export class PathGraphView extends ItemView {
      * @param length The maximum length of all paths shown.
      * @param graph The graph.
      */
-    setData(from: any, to: any, length: number, graph: ExtendedGraph) {
+    setData(from: any, to: any, length: number, graph: ExtendedGraph, generatedFromCSV: boolean = false) {
         const container = this.containerEl.children[1];
         container.empty();
 
@@ -93,14 +109,14 @@ export class PathGraphView extends ItemView {
         newGraph.addVertice(to);
         let source = newGraph.getID(from);
         let target = newGraph.getID(to);
-        this.source = source; this.target = target;
+        this.source = source; this.target = target; this.generatedFromCSV=generatedFromCSV;
         ForceGraphWithLabels(
             container,
             getNextPath(graph.getID(from), graph.getID(to), length, graph),
             {
                 graph: newGraph,
                 getNodes: this.getNodes.bind(this),
-                getLinks: this.getLinks
+                getLinks: this.getLinks.bind(this)
             },
             {
                 nodeGroup: (x: any) => {
@@ -111,18 +127,20 @@ export class PathGraphView extends ItemView {
                 nodeRadius: 10,
                 linkGroups: ["monodirectional", "bidirectional"],
                 nodeTitle: (x: any) => {
-                    let file = app.vault.getAbstractFileByPath(x.id);
-                    if (!file) return "undefined";
-                    else if (file instanceof TFile) {
-                        if (file.extension == "md")
-                            return file.basename;
-                        else {
-                            return file.name;
-                        }
-                    }
-                    else {
-                        return file.name;
-                    }
+                    // console.log(x);
+                    // let file = app.vault.getAbstractFileByPath(x.id);
+                    // if (!file) return "undefined";
+                    // else if (file instanceof TFile) {
+                    //     if (file.extension == "md")
+                    //         return file.basename;
+                    //     else {
+                    //         return file.name;
+                    //     }
+                    // }
+                    // else {
+                    //     return file.name;
+                    // }
+                    return x.id;
                 }
             });
     }
